@@ -34,6 +34,38 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// authentication
+function auth(req, res, next){
+  console.log(req.headers);
+
+  const authHeader= req.headers.authorization;
+  if(!authHeader ){
+    const err = new Error('Your are not authenticated');
+
+    res.setHeader('www-Authenticated',' Basic');
+    err.status= 401;
+    return next(err);
+  }
+
+  const auth = new Buffer(authHeader.split(' ')[1], 'base64')
+      .toString().split(':');
+
+  const username= auth[0];
+  const password = auth[1];
+
+  if(username ==='admin' && password==='password'){
+    next();
+  } else {
+    const err = new Error('Your are not authenticated');
+
+    res.setHeader('www-Authenticated',' Basic');
+    err.status= 401;
+    return next(err);
+  }
+}
+app.use(auth);
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
