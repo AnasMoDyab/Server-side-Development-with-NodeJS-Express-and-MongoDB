@@ -33,12 +33,15 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+// cookies
+app.use(cookieParser('12345-67890-09876-54321'));
 
-// authentication
+
+// authentication basic
 function auth(req, res, next){
-  console.log(req.headers);
+  console.log(req.signedCookies);
 
+if(!req.signedCookies.user){
   const authHeader= req.headers.authorization;
   if(!authHeader ){
     const err = new Error('Your are not authenticated');
@@ -48,13 +51,14 @@ function auth(req, res, next){
     return next(err);
   }
 
-  const auth = new Buffer(authHeader.split(' ')[1], 'base64')
+  const auth = new Buffer.from(authHeader.split(' ')[1], 'base64')
       .toString().split(':');
 
   const username= auth[0];
   const password = auth[1];
 
   if(username ==='admin' && password==='password'){
+    res.cookie('user', 'admin', {signed: true})
     next();
   } else {
     const err = new Error('Your are not authenticated');
@@ -63,6 +67,16 @@ function auth(req, res, next){
     err.status= 401;
     return next(err);
   }
+}
+ else {
+   if(req.signedCookies.user === 'admin'){
+     next();
+   }else {
+     const err = new Error('Your are not authenticated');
+     err.status= 401;
+     return next(err);
+   }
+}
 }
 app.use(auth);
 
