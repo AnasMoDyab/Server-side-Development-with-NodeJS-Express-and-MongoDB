@@ -106,9 +106,13 @@ dishRouter.route('/:dishId/comments')
                     dish.comments.push(req.body);
                     dish.save()
                         .then((dish) => {
-                            res.statusCode = 200;
-                            res.setHeader('Content-Type', 'application/json');
-                            res.json(dish);
+                            Dishes.findById(dish._id)
+                                .populate('comments.author')
+                                .then((dish) => {
+                                    res.statusCode = 200;
+                                    res.setHeader('Content-Type', 'application/json');
+                                    res.json(dish);
+                                })
                         }, (err) => next(err));
                 }
                 else {
@@ -175,7 +179,7 @@ dishRouter.route('/:dishId/comments/:commentId')
         res.end('POST operation not supported on /dishes/'+ req.params.dishId
             + '/comments/' + req.params.commentId);
     })
-    .put(authenticate.verifyUser, (req, res, next) => {
+    .put( authenticate.verifyUser, (req, res, next) => {
         Dishes.findById(req.params.dishId)
             .then((dish) => {
                 if (dish != null && dish.comments.id(req.params.commentId) != null
@@ -188,11 +192,15 @@ dishRouter.route('/:dishId/comments/:commentId')
                     }
                     dish.save()
                         .then((dish) => {
-                            res.statusCode = 200;
-                            res.setHeader('Content-Type', 'application/json');
-                            res.json(dish);
+                            Dishes.findById(dish._id)
+                                .populate('comments.author')
+                                .then((dish) => {
+                                    res.statusCode = 200;
+                                    res.setHeader('Content-Type', 'application/json');
+                                    res.json(dish);
+                                })
                         }, (err) => next(err));
-                }
+                        }
                 else if (dish == null) {
                     err = new Error('Dish ' + req.params.dishId + ' not found');
                     err.status = 404;
